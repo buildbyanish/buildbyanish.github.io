@@ -1,1 +1,35 @@
+name: Update README repos
+
+on:
+  schedule:
+    - cron: '0 3 * * *'      # daily at 03:00 UTC — adjust as you like
+  workflow_dispatch: {}      # lets you trigger it manually from the Actions tab
+  push:
+    branches: [main]
+    paths-ignore:
+      - README.md            # prevents the bot's own commit from re-triggering itself
+
+permissions:
+  contents: write
+
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Generate README repo section
+        run: node scripts/generate-readme.js
+
+      - name: Commit changes if any
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git diff --cached --quiet || git commit -m "chore: auto-update featured repos"
+          git push
 
